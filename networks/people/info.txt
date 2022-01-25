@@ -1,0 +1,3 @@
+Network of all the twitter profiles collected.
+Nodes: politicians and common users
+Edges: replies (from user to politician)
