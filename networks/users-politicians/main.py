@@ -1,5 +1,6 @@
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
+import pandas as pd
 
 import csv
 
@@ -53,16 +54,38 @@ try:
         curs = conn.cursor()
         print("database connected")
 
-        columns_name = ['id']
+        curs.execute("SELECT user_id, user_id FROM public.tweet where in_reply_twitter_id is not null group by user_id;")
 
-        curs.execute("SELECT user_id  FROM public.tweet where in_reply_twitter_id is null;")
+        users = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
 
-        content = castData(curs)
+        curs.execute("SELECT * FROM public.users;")
 
-        toCSV('nodes.csv',columns_name,content)
+        politicians = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
 
-        for record in curs:
-            print(record)
+        nodes = pd.concat([users, politicians])
+
+        curs.execute("SELECT user_id, in_reply_twitter_id FROM public.tweet where in_reply_twitter_id is not null;")
+
+        edges = pd.DataFrame.from_records(curs, columns = ['source', 'tweet_id'])
+
+        edges['target'] = pd.NaT
+
+        curs.execute("SELECT user_id, twitter_id FROM public.tweet where in_reply_twitter_id is null;")
+
+        replies = pd.DataFrame.from_records(curs, columns = ['user_id', 'tweet_id'])
+
+        for i in range(len(replies['tweet_id'])):
+            tweet_id = replies['tweet_id'][i]
+            user_id = replies['user_id'][i]
+            edges['target'].loc[edges['tweet_id'] == int(tweet_id)] = user_id
+
+        edges.drop(['tweet_id'], axis=1)
+
+        edges.to_csv('edges.csv', columns=['source','target'], index=False)
+
+        nodes.to_csv('nodes.csv', index=False)
+        
+
 
 except (Exception) as error:
     print("Connection Failed")
