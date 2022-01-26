@@ -31,15 +31,20 @@ try:
         curs = conn.cursor()
         print("database connected")
 
-        curs.execute("SELECT user_id, user_id FROM public.tweet where in_reply_twitter_id is not null group by user_id;")
+        curs.execute("SELECT user_id FROM public.tweet group by user_id;")
 
-        users = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
+        nodes = pd.DataFrame.from_records(curs, columns = ['id'])
 
         curs.execute("SELECT * FROM public.users;")
 
-        politicians = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
+        politicians = pd.DataFrame.from_records(curs, columns = ['id', 'username'])
 
-        nodes = pd.concat([users, politicians])
+        nodes['label'] = pd.NaT
+
+        for i in range(len(nodes['id'])):
+            for j in range(len(politicians['id'])):
+                if(nodes['id'][i] == politicians['id'][j]):
+                    nodes['label'][i] = politicians['username'][j]
 
         curs.execute("SELECT user_id, in_reply_twitter_id FROM public.tweet where in_reply_twitter_id is not null;")
 
