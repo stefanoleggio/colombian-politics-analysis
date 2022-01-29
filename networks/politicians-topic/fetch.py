@@ -6,26 +6,14 @@ def nodes(curs):
 	curs.execute("SELECT id,topic_name FROM public.topic;")
 	topics = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
 		
-	curs.execute("SELECT user_id FROM public.tweet group by user_id;")
-
-	nodes = pd.DataFrame.from_records(curs, columns = ['id'])
-
 	curs.execute("SELECT * FROM public.users;")
-
-	politicians = pd.DataFrame.from_records(curs, columns = ['id', 'username'])
-
-	nodes['label'] = pd.NaT
-
-	for i in range(len(nodes['id'])):
-		for j in range(len(politicians['id'])):
-		  	if(nodes['id'][i] == politicians['id'][j]):
-		        	nodes['label'][i] = politicians['username'][j]
-		            
+	nodes = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
+            
 	nodes = nodes.append(topics)
 	nodes.to_csv('nodes.csv', index=False)
 
 def edges(curs):
-	curs.execute("SELECT user_id,id_topic FROM public.tweet_topic JOIN public.tweet ON id_tweet = id;") 
+	curs.execute("SELECT user_id,id_topic FROM public.tweet_topic JOIN public.tweet ON id_tweet = id WHERE in_reply_twitter_id IS NULL;") 
 	edges = pd.DataFrame.from_records(curs, columns = ['source','target'])
 	edges.to_csv('edges.csv', index=False)
 
