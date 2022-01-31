@@ -3,7 +3,7 @@ from sshtunnel import SSHTunnelForwarder
 import pandas as pd
 
 def nodes(curs):
-	curs.execute("SELECT id,topic_name FROM public.topic;")
+	curs.execute("SELECT topicnumbers,topic_name FROM public.topic GROUP BY topicnumbers, topic_name;")
 	topics = pd.DataFrame.from_records(curs, columns = ['id', 'label'])
 		
 	curs.execute("SELECT * FROM public.users;")
