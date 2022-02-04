@@ -1,0 +1,4 @@
+.env
+.env.premium
+.env.personal
+output/*
